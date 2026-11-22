@@ -21,6 +21,9 @@ fi
 
 systemctl --user enable --now nextcloud-podman-api.service nextcloud-harp.service
 
+# occ fails while the entrypoint installs or upgrades Nextcloud
+podman exec nextcloud-app flock nextcloud-init-sync.lock true
+
 occ app:enable app_api
 
 # The occ wrapper runs with a terminal, which adds carriage returns
@@ -44,8 +47,10 @@ registered() {
 # Ports change when a backup is restored on another node
 current=$(registered)
 if [[ -n "${current}" && "${current}" != "$(jq -nc --arg u "${nc_url}" --arg f "${frp_address}" '[$u, $f]')" ]]; then
-    occ app_api:daemon:unregister "${daemon}" || \
+    if ! occ app_api:daemon:unregister "${daemon}"; then
         echo "Daemon ${daemon} uses old ports. Remove its External Apps, then save the settings again."
+        exit 1
+    fi
 fi
 
 if [[ -z "$(registered)" ]]; then
