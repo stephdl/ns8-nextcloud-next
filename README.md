@@ -1,4 +1,7 @@
-# ns8-nextcloud
+# ns8-nextcloud-next
+
+Test fork of [ns8-nextcloud](https://github.com/NethServer/ns8-nextcloud) running the latest Nextcloud
+release and its stable dependencies. There is no migration path from ns8-nextcloud: install it as a new module.
 
 Start and configure a Nexctloud instance:
 - with PHP FPM + nginx as a proxy
@@ -10,18 +13,18 @@ The module uses [Official Nextcloud image](https://hub.docker.com/_/nextcloud).
 
 Instantiate the module:
 ```
-add-module nextcloud 1
+add-module ghcr.io/stephdl/nextcloud-next:latest 1
 ```
 
 The output of the command will return the instance name.
 Output example:
 ```
-{'module_id': 'nextcloud8', 'image_name': 'nextcloud', 'image_url': 'ghcr.io/nethserver/nextcloud:latest'}
+{'module_id': 'nextcloud-next1', 'image_name': 'nextcloud-next', 'image_url': 'ghcr.io/stephdl/nextcloud-next:latest'}
 ```
 
 ## Configure
 
-Let's assume that the nextcloud istance is named `nextcloud1`.
+Let's assume that the nextcloud istance is named `nextcloud-next1`.
 
 Then launch `configure-module`, by setting the following parameters:
 - fully qualified domain name for Nextcloud
@@ -35,7 +38,7 @@ Then launch `configure-module`, by setting the following parameters:
 
 Example:
 ```
-api-cli run module/nextcloud1/configure-module --data - <<EOF
+api-cli run module/nextcloud-next1/configure-module --data - <<EOF
 {
     "host": "nextcloud.nethserver.org",
     "lets_encrypt": true,
@@ -48,14 +51,14 @@ EOF
 
 To execute `occ` command inside an instance:
 ```
-runagent -m nextcloud1 occ <args>
+runagent -m nextcloud-next1 occ <args>
 ```
 
 You can customize FPM configuration by changing the file named `zzz_nethserver.conf` inside the state directory.
 Example:
 
 ```
-runagent -m nextcloud1 vi zzz_nethserver.conf
+runagent -m nextcloud-next1 vi zzz_nethserver.conf
 ```
 
 ## Two-factor authentication (TOTP)
@@ -65,7 +68,7 @@ See the [Nextcloud two-factor documentation](https://docs.nextcloud.com/server/s
 ### Enforce TOTP for all users
 
 ```
-runagent -m nextcloud1 occ twofactorauth:enforce --on
+runagent -m nextcloud-next1 occ twofactorauth:enforce --on
 ```
 Output:
 ```
@@ -77,12 +80,12 @@ To limit it to some groups, use `--group <group>` or `--exclude <group>`.
 
 Check the current policy:
 ```
-runagent -m nextcloud1 occ twofactorauth:enforce
+runagent -m nextcloud-next1 occ twofactorauth:enforce
 ```
 
 Stop enforcing it:
 ```
-runagent -m nextcloud1 occ twofactorauth:enforce --off
+runagent -m nextcloud-next1 occ twofactorauth:enforce --off
 ```
 Output:
 ```
@@ -93,7 +96,7 @@ Two-factor authentication is not enforced
 
 LDAP users have an internal Nextcloud ID (a UUID), not their login name:
 ```
-runagent -m nextcloud1 occ user:list
+runagent -m nextcloud-next1 occ user:list
 ```
 Output:
 ```
@@ -108,7 +111,7 @@ Here the ID of `john.doe` is `0A1B2C3D-0000-4000-8000-000000000001`.
 
 Use this when a user lost their authenticator app:
 ```
-runagent -m nextcloud1 occ twofactorauth:disable 0A1B2C3D-0000-4000-8000-000000000001 totp
+runagent -m nextcloud-next1 occ twofactorauth:disable 0A1B2C3D-0000-4000-8000-000000000001 totp
 ```
 Output:
 ```
@@ -126,7 +129,7 @@ Do not use `occ twofactorauth:cleanup totp` here: it removes TOTP data for all u
 ### Check the enrollment
 
 ```
-runagent -m nextcloud1 occ twofactorauth:state 0A1B2C3D-0000-4000-8000-000000000001
+runagent -m nextcloud-next1 occ twofactorauth:state 0A1B2C3D-0000-4000-8000-000000000001
 ```
 
 After the reset, before the user enrolls again:
@@ -157,7 +160,7 @@ By adding `LDAP_MAIL_ATTRIBUTE` your users wil be able to login with :
  - `mail`: eg `john@domain.com`
 
 
-`runagent -m nextcloud1`
+`runagent -m nextcloud-next1`
 `vim environment`
 add : `LDAP_MAIL_ATTRIBUTE=mail`
 `systemctl --user restart nextcloud`
@@ -167,13 +170,13 @@ add : `LDAP_MAIL_ATTRIBUTE=mail`
 Nextcloud requires manual database fixes that cannot be automated during upgrade, as operations may take a long time with large amounts of data.
 In such cases, the `nextcloud-db-optimize` command can be run manually to optimize the Nextcloud database outside production hours.
 
-    runagent -m nextcloud1 nextcloud-db-optimize
+    runagent -m nextcloud-next1 nextcloud-db-optimize
 
 ## Uninstall
 
 To uninstall the instance:
 
-    remove-module --no-preserve nextcloud1
+    remove-module --no-preserve nextcloud-next1
 
 ## Running tests locally
 
