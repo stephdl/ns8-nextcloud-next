@@ -260,9 +260,6 @@ This deletes the volumes, so every file and the database.
 **Setup checks say the last background job ran 56 years ago.** The instance is new. Cron
 runs every 5 minutes inside `nextcloud-app`. Look again after that.
 
-**Setup checks warn about `innodb_log_file_size`.** MariaDB uses 96M, Nextcloud 35 advises
-more. This is a tuning hint, not an error.
-
 **LDAP users cannot log in.** Check the user domain in the cluster, then:
 
 ```sh
