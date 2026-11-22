@@ -24,8 +24,23 @@ if ! buildah containers --format "{{.ContainerName}}" | grep -q nodebuilder-next
     buildah run nodebuilder-nextcloud-next sh -c "npm install -g corepack@${corepack_version} && corepack enable"
 fi
 
+redis_image="docker.io/redis:8.10.3-alpine"
+mariadb_image="docker.io/mariadb:12.3.3"
+nginx_image="docker.io/nginx:1.30.7-alpine"
+
+# Read the versions from the image tags, so Renovate keeps the About page in sync
+nextcloud_version=$(sed -n 's/^FROM .*nextcloud:\([0-9.]*\)-.*/\1/p' nextcloud/Dockerfile)
+notify_push_version=$(sed -n 's/^ARG NOTIFY_PUSH_VERSION="\(.*\)"/\1/p' notify_push/Dockerfile)
+
 echo "Build static UI files with node..."
-buildah run --env="NODE_OPTIONS=--openssl-legacy-provider" nodebuilder-nextcloud-next sh -c "cd /usr/src/ui && yarn install && yarn build"
+buildah run \
+    --env="NODE_OPTIONS=--openssl-legacy-provider" \
+    --env="VUE_APP_NEXTCLOUD_VERSION=${nextcloud_version}" \
+    --env="VUE_APP_MARIADB_VERSION=${mariadb_image##*:}" \
+    --env="VUE_APP_REDIS_VERSION=${redis_image##*:}" \
+    --env="VUE_APP_NGINX_VERSION=${nginx_image##*:}" \
+    --env="VUE_APP_NOTIFY_PUSH_VERSION=${notify_push_version}" \
+    nodebuilder-nextcloud-next sh -c "cd /usr/src/ui && yarn install && yarn build"
 
 # Add imageroot directory to the container image
 buildah add "${container}" imageroot /imageroot
@@ -37,7 +52,7 @@ buildah config --entrypoint=/ \
     --label="org.nethserver.rootfull=0" \
     --label="org.nethserver.volumes=nextcloud-app-data" \
     --label="org.nethserver.min-core=3.20.1" \
-    --label="org.nethserver.images=docker.io/redis:8.10.3-alpine docker.io/mariadb:12.3.3 docker.io/nginx:1.30.7-alpine ${repobase}/nextcloud-next-app:${IMAGETAG} ${repobase}/nextcloud-next-notify_push:${IMAGETAG}" \
+    --label="org.nethserver.images=${redis_image} ${mariadb_image} ${nginx_image} ${repobase}/nextcloud-next-app:${IMAGETAG} ${repobase}/nextcloud-next-notify_push:${IMAGETAG}" \
     "${container}"
 # Commit the image
 buildah commit "${container}" "${repobase}/${reponame}"

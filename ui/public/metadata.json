@@ -12,11 +12,15 @@
     {
       "name": "Giacomo Sanchietti",
       "email": "giacomo.sanchietti@nethesis.it"
+    },
+    {
+      "name": "Stephane de Labrusse",
+      "email": "stephdl@de-labrusse.fr"
     }
   ],
   "docs": {
-    "documentation_url": "https://docs.nethserver.org/projects/ns8/en/latest/nextcloud.html",
-    "bug_url": "https://github.com/stephdl/ns8-nextcloud-next/issues",
+    "documentation_url": "https://github.com/stephdl/ns8-nextcloud-next/blob/main/docs/admin-guide.md",
+    "bug_url": "https://github.com/stephdl/dev/issues",
     "code_url": "https://github.com/stephdl/ns8-nextcloud-next"
   },
   "source": "ghcr.io/stephdl/nextcloud-next"
