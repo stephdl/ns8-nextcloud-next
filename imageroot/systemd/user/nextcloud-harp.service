@@ -20,8 +20,9 @@ ExecStart=/usr/bin/podman run --conmon-pidfile %t/nextcloud-harp.pid --cidfile %
   -v %t/nextcloud-podman.sock:/var/run/docker.sock \
   --env-file %E/state/harp.env \
   ${NEXTCLOUD_APPAPI_HARP_IMAGE}
-# Rootless podman does not restart "unless-stopped" containers after a reboot
-ExecStartPost=-/bin/bash -c "/usr/bin/podman ps -aq --filter name=^nc_app_ | xargs -r /usr/bin/podman start"
+# Rootless podman does not restart "unless-stopped" containers after a reboot.
+# Skip the ExApps that AppAPI stopped on purpose: podman marks them StoppedByUser.
+ExecStartPost=/bin/bash -c "/usr/bin/podman ps -aq --filter name=^nc_app_ --filter status=exited | xargs -r /usr/bin/podman inspect --format '{{.Name}} {{.State.StoppedByUser}}' | awk '$$2 == \"false\" {print $$1}' | xargs -r /usr/bin/podman start"
 ExecStop=/usr/bin/podman stop --ignore --cidfile %t/nextcloud-harp.ctr-id -t 10
 ExecStopPost=/usr/bin/podman rm --ignore -f --cidfile %t/nextcloud-harp.ctr-id
 PIDFile=%t/nextcloud-harp.pid

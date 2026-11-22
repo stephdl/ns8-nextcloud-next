@@ -14,12 +14,18 @@ daemon=harp_proxy
 
 if [[ "$(jq -r '.exapps // false' config.json)" != "true" ]]; then
     systemctl --user disable --now nextcloud-harp.service nextcloud-podman-api.service
-    # Keep the ExApps and their data, so turning the feature on again restores them
-    podman ps -q --filter name=^nc_app_ | xargs -r podman stop
+    # Keep the ExApps and their data, so turning the feature on again restores them.
+    # podman stop marks them StoppedByUser, so remember which ones were running.
+    podman ps -q --filter name=^nc_app_ > exapps-running
+    xargs -r podman stop < exapps-running
     exit 0
 fi
 
 systemctl --user enable --now nextcloud-podman-api.service nextcloud-harp.service
+if [[ -f exapps-running ]]; then
+    xargs -r podman start < exapps-running
+    rm -f exapps-running
+fi
 
 # occ fails while the entrypoint installs or upgrades Nextcloud
 podman exec nextcloud-app flock nextcloud-init-sync.lock true
