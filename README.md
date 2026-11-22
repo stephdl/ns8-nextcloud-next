@@ -1,192 +1,94 @@
 # ns8-nextcloud-next
 
-Test fork of [ns8-nextcloud](https://github.com/NethServer/ns8-nextcloud) running the latest Nextcloud
-release and its stable dependencies. There is no migration path from ns8-nextcloud: install it as a new module.
+A [Nextcloud](https://nextcloud.com) module for [NethServer 8](https://github.com/NethServer/ns8-core),
+built on the latest Nextcloud release and the stable branch of its dependencies.
+It is a fork of [ns8-nextcloud](https://github.com/NethServer/ns8-nextcloud) made to test
+new versions early.
 
-Start and configure a Nexctloud instance:
-- with PHP FPM + nginx as a proxy
-- redis caching
-- MariaDB database
-The module uses [Official Nextcloud image](https://hub.docker.com/_/nextcloud).
+There is no migration from ns8-nextcloud. Install it as a new module, next to the old one
+if needed.
 
-## Install
+| Component | Version |
+| --- | --- |
+| Nextcloud | 35, official `fpm-alpine` image, PHP 8.5 |
+| MariaDB | 12.3 LTS |
+| Redis | 8 |
+| nginx | 1.30 stable |
+| notify_push | 1.4 |
 
-Instantiate the module:
+```mermaid
+flowchart LR
+    B["Browser, desktop<br/>and mobile clients"] -- "https://host/" --> T["Traefik :443"]
+    subgraph NS8["NS8 node"]
+        T --> N["nginx"]
+        subgraph Pod["rootless pod nextcloud"]
+            N --> A["nextcloud-app<br/>PHP-FPM + cron"]
+            N -- "/push/" --> P["notify_push"]
+            A --- D[("MariaDB")]
+            A --- R[("Redis")]
+            P --- D
+            P --- R
+        end
+        A -- "LDAP" --> L["ldapproxy<br/>user domain"]
+    end
 ```
+
+## Documentation
+
+- [Admin guide](docs/admin-guide.md): install, configure, user domain, mail, Collabora,
+  two-factor authentication, backup and restore, troubleshooting.
+- [User guide](docs/user-guide.md): for the person who uses Nextcloud. Log in, connect the
+  desktop and mobile clients, set up two-factor authentication.
+- [Architecture](docs/architecture.md): containers, systemd units, module state, actions and
+  what each one writes.
+
+## Quick start
+
+```sh
 add-module ghcr.io/stephdl/nextcloud-next:latest 1
 ```
 
-The output of the command will return the instance name.
-Output example:
-```
-{'module_id': 'nextcloud-next1', 'image_name': 'nextcloud-next', 'image_url': 'ghcr.io/stephdl/nextcloud-next:latest'}
-```
+The output of the command returns the instance name, for example `nextcloud-next1`. Then fill
+in the Settings page, or:
 
-## Configure
-
-Let's assume that the nextcloud istance is named `nextcloud-next1`.
-
-Then launch `configure-module`, by setting the following parameters:
-- fully qualified domain name for Nextcloud
-- let's encrypt option
-- LDAP domain (optional)
-- `internal_smarthost` (required): `true` to manage email sending from
-  the Nextcloud admin panel, `false` to apply the cluster smarthost
-  settings every time the `nextcloud-app` service starts. With `false`
-  and no cluster smarthost configured, the module removes the SMTP
-  server settings entered in the Nextcloud admin panel.
-
-Example:
-```
-api-cli run module/nextcloud-next1/configure-module --data - <<EOF
-{
-    "host": "nextcloud.nethserver.org",
-    "lets_encrypt": true,
-    "domain": "ad.nethserver.org",
-    "password": "Nethesis,1234",
-    "internal_smarthost": false
-}
-EOF
+```sh
+api-cli run module/nextcloud-next1/configure-module --data '{"host": "cloud.example.org", "lets_encrypt": false, "domain": "ad.example.org", "password": "Admin-pass-2026", "internal_smarthost": false}'
 ```
 
-To execute `occ` command inside an instance:
-```
-runagent -m nextcloud-next1 occ <args>
-```
+`host` and `internal_smarthost` are required. Leave `domain` empty to use only local
+Nextcloud accounts. Let's Encrypt needs a public DNS name for `host` pointing to the node:
+set `lets_encrypt` to `true` only then.
 
-You can customize FPM configuration by changing the file named `zzz_nethserver.conf` inside the state directory.
-Example:
+`password` is the password of the Nextcloud `admin` account. It is used only at the first
+start, when Nextcloud installs itself. Changing it later in Settings does not change the
+account. See [Admin password](docs/admin-guide.md#admin-password).
 
-```
-runagent -m nextcloud-next1 vi zzz_nethserver.conf
-```
+Open `https://cloud.example.org` and log in as `admin`, or with an account of the user domain.
 
-## Two-factor authentication (TOTP)
+## Known limits
 
-See the [Nextcloud two-factor documentation](https://docs.nextcloud.com/server/stable/admin_manual/configuration_user/two_factor-auth.html) for all options.
+- No upgrade path from ns8-nextcloud, and no stable release of this fork yet. Each future
+  Nextcloud major version must be installed in order: 35, then 36. Do not skip one.
+- `zzz_nethserver.conf` and `nginx.conf` are written again at each module update. Manual
+  changes to them are lost.
+- Removing the user domain from Settings does not remove the LDAP configuration from
+  Nextcloud. See [Change the user domain](docs/admin-guide.md#change-the-user-domain).
+- The MariaDB password is the same fixed value in every instance. The database listens only
+  inside the pod, but anyone who reads the module state reads it too.
 
-### Enforce TOTP for all users
+## Testing
 
-```
-runagent -m nextcloud-next1 occ twofactorauth:enforce --on
-```
-Output:
-```
-Two-factor authentication is enforced for all users
-```
+The Robot Framework tests in [tests/](tests/) run in CI on a fresh NS8 node, on Rocky Linux 9
+and Debian 13. They install the module, configure it, check that Nextcloud answers, create a
+user, upload a file with WebDAV and read it back, check that Nextcloud 35 and MariaDB 12.3 are
+running, then remove the module.
 
-Users without a second factor must set up TOTP at their next login.
-To limit it to some groups, use `--group <group>` or `--exclude <group>`.
+The update scenario enables the stephdl forge, installs the release published there, updates
+it to the image under test, and checks that the configuration, u1 and its file survive.
+CI runs only the install scenario until nextcloud-next is published in the forge. Then add
+`update` to `scenarios` in [test-module.yml](.github/workflows/test-module.yml).
 
-Check the current policy:
-```
-runagent -m nextcloud-next1 occ twofactorauth:enforce
-```
+To run the suite on your own node, see
+[Running tests locally](https://github.com/NethServer/ns8-github-actions/blob/v1/README.md#running-tests-locally).
 
-Stop enforcing it:
-```
-runagent -m nextcloud-next1 occ twofactorauth:enforce --off
-```
-Output:
-```
-Two-factor authentication is not enforced
-```
-
-### Find the user ID
-
-LDAP users have an internal Nextcloud ID (a UUID), not their login name:
-```
-runagent -m nextcloud-next1 occ user:list
-```
-Output:
-```
-  - admin: admin
-  - 0A1B2C3D-0000-4000-8000-000000000001: John Doe (john.doe)
-  - 0A1B2C3D-0000-4000-8000-000000000002: Jane Smith (jane.smith)
-```
-
-Here the ID of `john.doe` is `0A1B2C3D-0000-4000-8000-000000000001`.
-
-### Disable TOTP for a user
-
-Use this when a user lost their authenticator app:
-```
-runagent -m nextcloud-next1 occ twofactorauth:disable 0A1B2C3D-0000-4000-8000-000000000001 totp
-```
-Output:
-```
-Two-factor provider totp disabled for user 0A1B2C3D-0000-4000-8000-000000000001.
-```
-
-This also deletes the TOTP secret, so the old authenticator entry stops working.
-The user then enrolls again with a new QR code:
-- if TOTP is enforced, Nextcloud asks to set it up right after the password at the next login
-- otherwise, the user enables TOTP in Personal settings > Security
-
-Backup codes do not count as a second factor, so they do not bypass this step.
-Do not use `occ twofactorauth:cleanup totp` here: it removes TOTP data for all users.
-
-### Check the enrollment
-
-```
-runagent -m nextcloud-next1 occ twofactorauth:state 0A1B2C3D-0000-4000-8000-000000000001
-```
-
-After the reset, before the user enrolls again:
-```
-Two-factor authentication is not enabled for user 0A1B2C3D-0000-4000-8000-000000000001
-
-Disabled providers:
-- backup_codes
-- totp
-```
-
-Once the user has enrolled, `totp` is listed as enabled:
-```
-Two-factor authentication is enabled for user 0A1B2C3D-0000-4000-8000-000000000001
-
-Enabled providers:
-- totp
-Disabled providers:
-- backup_codes
-```
-
-## Specific ldap mail field for Samba AD
-
-You can change the mail field used by Nextcloud with an environment variable. The default LDAP mail field is `userPrincipalName`, which corresponds to the AD domain name and not the user's email address.
-By adding `LDAP_MAIL_ATTRIBUTE` your users wil be able to login with :
- - `sAMAccountName`: eg `john`
- - `userPrincipalName`: eg `john@ad.domain.com`
- - `mail`: eg `john@domain.com`
-
-
-`runagent -m nextcloud-next1`
-`vim environment`
-add : `LDAP_MAIL_ATTRIBUTE=mail`
-`systemctl --user restart nextcloud`
-
-## DB-fix script
-
-Nextcloud requires manual database fixes that cannot be automated during upgrade, as operations may take a long time with large amounts of data.
-In such cases, the `nextcloud-db-optimize` command can be run manually to optimize the Nextcloud database outside production hours.
-
-    runagent -m nextcloud-next1 nextcloud-db-optimize
-
-## Uninstall
-
-To uninstall the instance:
-
-    remove-module --no-preserve nextcloud-next1
-
-## Running tests locally
-
-This module uses the NS8 standard testing infrastructure. For instructions on how to run the test suite locally, refer to the [Running tests locally](https://github.com/NethServer/ns8-github-actions/blob/v1/README.md#running-tests-locally) section of the ns8-github-actions repository.
-
-## UI translation
-
-Translated with [Weblate](https://hosted.weblate.org/projects/ns8/).
-
-To setup the translation process:
-
-- add [GitHub Weblate app](https://docs.weblate.org/en/latest/admin/continuous.html#github-setup) to your repository
-- add your repository to [hosted.weblate.org](https://hosted.weblate.org) or ask a NethServer developer to add it to ns8 Weblate project
+The UI translations come from ns8-nextcloud, as they were at the fork.
