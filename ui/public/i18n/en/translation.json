@@ -5,8 +5,6 @@
     },
     "status": {
         "title": "Status",
-        "app_instance": "App instance",
-        "services": "Service | Services",
         "app_images": "App image | App images",
         "app_volumes": "App volume | App volumes",
         "installation_node": "Installation node",
@@ -21,7 +19,15 @@
         "nextcloud_webapp": "Nextcloud webapp",
         "not_configured": "Not configured",
         "open_nextcloud_webapp": "Open Nextcloud",
-        "configure": "Configure"
+        "configure": "Configure",
+        "application": "Application",
+        "restart_application": "Restart application",
+        "restart_module_warning": "Are you sure you want to restart {name}? The service will be briefly unavailable during the restart.",
+        "go_to_node_details": "Go to node details",
+        "failed_services": "Failed services",
+        "all_services_running": "All services are running",
+        "search_images": "Search images",
+        "search_volumes": "Search volumes"
     },
     "settings": {
         "title": "Settings",
@@ -47,7 +53,9 @@
         "admin_password_tooltip": "The user 'admin' is the internal administrator of Nextcloud. This password is used to authenticate the 'admin' user in the Nextcloud web interface.",
         "host_pattern": "Must be a valid fully qualified domain name",
         "host_format": "Must be a valid fully qualified domain name",
-        "internal_smarthost": "Manage email sending from Nextcloud admin panel"
+        "internal_smarthost": "Manage email sending from Nextcloud admin panel",
+        "exapps": "External Apps",
+        "exapps_tooltip": "Lets Nextcloud install External Apps, like local AI, translation or speech to text. Each app runs in its own container. Images often take several GB of disk space, are not included in the backup, and run on the CPU only."
     },
     "about": {
         "title": "About"
@@ -59,7 +67,10 @@
         "get-status": "Get status",
         "get-configuration": "Get configuration",
         "configure-module": "Configure module",
-        "get-module-info": "Get module info"
+        "get-module-info": "Get module info",
+        "list-backup-repositories": "List backup repositories",
+        "list-backups": "List backups",
+        "restart-module": "Restart module"
     },
     "error": {
         "error": "Error",

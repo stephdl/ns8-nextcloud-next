@@ -82,5 +82,8 @@ if "tls_verify_collabora" not in config:
 if "internal_smarthost" not in config:
     config["internal_smarthost"] = False
 
+if "exapps" not in config:
+    config["exapps"] = False
+
 # Dump the configuration to stdout
 json.dump(config, fp=sys.stdout)

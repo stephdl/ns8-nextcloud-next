@@ -1,0 +1,89 @@
+{
+    "common": {
+        "required": "Obligatoire",
+        "work_in_progress": "Travail en cours"
+    },
+    "status": {
+        "title": "État",
+        "app_images": "Image de l'application | Images de l'application",
+        "app_volumes": "Volume de l'application | Volumes de l'application",
+        "installation_node": "Nœud d'installation",
+        "node": "Nœud",
+        "name": "Nom",
+        "size": "Taille",
+        "created": "Créé",
+        "mount": "Point de montage",
+        "no_services": "Aucun service",
+        "no_images": "Aucune image",
+        "no_volumes": "Aucun volume",
+        "nextcloud_webapp": "Application web Nextcloud",
+        "not_configured": "Non configuré",
+        "open_nextcloud_webapp": "Ouvrir Nextcloud",
+        "configure": "Configurer",
+        "application": "Application",
+        "restart_application": "Redémarrer l'application",
+        "restart_module_warning": "Voulez-vous vraiment redémarrer {name} ? Le service sera brièvement indisponible pendant le redémarrage.",
+        "go_to_node_details": "Voir les détails du nœud",
+        "failed_services": "Services en échec",
+        "all_services_running": "Tous les services fonctionnent",
+        "search_images": "Rechercher des images",
+        "search_volumes": "Rechercher des volumes"
+    },
+    "settings": {
+        "title": "Paramètres",
+        "host": "Nom d'hôte",
+        "disabled": "Désactivé",
+        "enabled": "Activé",
+        "save": "Enregistrer",
+        "instance_configuration": "Configurer {instance}",
+        "configuring": "Configuration en cours...",
+        "lets_encrypt": "Certificat Let's Encrypt",
+        "domain": "Domaine utilisateurs",
+        "no_user_domain": "Base d'utilisateurs interne de Nextcloud",
+        "host_string_gte": "Le nom d'hôte ne peut pas être vide",
+        "configure_nextcloud": "Configurer Nextcloud",
+        "host_invalid_type": "Nom d'hôte invalide",
+        "collabora_host": "Nom d'hôte du serveur CODE",
+        "collabora_host_tooltip": "Collabora Online Development Edition (CODE) est un serveur LibreOffice Online auto-hébergeable. Il permet de modifier des documents bureautiques dans un navigateur web.",
+        "tls_verify_collabora": "Vérifier le certificat TLS",
+        "collabora_placeholder": "Choisissez un serveur Collabora ou laissez vide pour le désactiver",
+        "admin_password": "Mot de passe de l'utilisateur 'admin'",
+        "choose_ldap_domain": "Choisissez un domaine utilisateurs",
+        "host_placeholder": "Ex. : monnextcloud.example.org",
+        "admin_password_tooltip": "L'utilisateur 'admin' est l'administrateur interne de Nextcloud. Ce mot de passe sert à authentifier l'utilisateur 'admin' dans l'interface web de Nextcloud.",
+        "host_pattern": "Doit être un nom de domaine complet (FQDN) valide",
+        "host_format": "Doit être un nom de domaine complet (FQDN) valide",
+        "internal_smarthost": "Gérer l'envoi des e-mails depuis l'administration de Nextcloud",
+        "exapps": "Applications externes",
+        "exapps_tooltip": "Permet à Nextcloud d'installer des applications externes, comme une IA locale, la traduction ou la transcription vocale. Chaque application tourne dans son propre conteneur. Les images occupent souvent plusieurs Go sur le disque, ne sont pas incluses dans la sauvegarde et fonctionnent uniquement sur le processeur."
+    },
+    "about": {
+        "title": "À propos"
+    },
+    "task": {
+        "cannot_create_task": "Impossible de créer la tâche {action}"
+    },
+    "action": {
+        "get-status": "Lire l'état",
+        "get-configuration": "Lire la configuration",
+        "configure-module": "Configurer le module",
+        "get-module-info": "Lire les informations du module",
+        "list-backup-repositories": "Lister les dépôts de sauvegarde",
+        "list-backups": "Lister les sauvegardes",
+        "restart-module": "Redémarrer le module"
+    },
+    "error": {
+        "error": "Erreur",
+        "generic_error": "Une erreur s'est produite",
+        "validation_error": "Erreur de validation",
+        "network_error": "Erreur réseau",
+        "network_timeout": "Délai réseau dépassé",
+        "401": "Authentification invalide",
+        "403": "Opération non autorisée",
+        "404": "Ressource introuvable",
+        "cannot_retrieve_module_info": "Impossible de récupérer les informations du module",
+        "cannot_retrieve_installed_modules": "Impossible de récupérer les modules installés",
+        "cannot_retrieve_configuration": "Impossible de récupérer la configuration",
+        "password_invalid_chars": "Le mot de passe ne doit contenir ni espaces ni les caractères suivants : ' \" ="
+    }
+}

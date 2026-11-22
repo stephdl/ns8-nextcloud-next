@@ -59,6 +59,15 @@
         "nextcloud"
       ],
       "allowedVersions": "35.*"
+    },
+    {
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "ghcr.io/nextcloud/nextcloud-appapi-harp"
+      ],
+      "automerge": false
     }
   ],
   "regexManagers": [

@@ -164,6 +164,23 @@
                 $t("settings.enabled")
               }}</template>
             </NsToggle>
+            <NsToggle
+              value="exapps"
+              :label="$t('settings.exapps')"
+              v-model="exapps"
+              :disabled="loadingUi"
+              class="mg-bottom"
+            >
+              <template slot="tooltip">{{
+                $t("settings.exapps_tooltip")
+              }}</template>
+              <template slot="text-left">{{
+                $t("settings.disabled")
+              }}</template>
+              <template slot="text-right">{{
+                $t("settings.enabled")
+              }}</template>
+            </NsToggle>
             <cv-row v-if="error.getStatus">
               <cv-column>
                 <NsInlineNotification
@@ -258,6 +275,7 @@ export default {
       isLetsEncryptEnabled: false,
       isLetsEncryptCurrentlyEnabled: false,
       internalSmarthost: false,
+      exapps: false,
       collabora_host: "",
       domain: "",
       password: "Nethesis,1234",
@@ -508,6 +526,7 @@ export default {
             lets_encrypt: this.isLetsEncryptEnabled,
             domain: this.domain === "-" ? "" : this.domain,
             internal_smarthost: this.internalSmarthost,
+            exapps: this.exapps,
             is_collabora: this.is_collabora,
             collabora_host: this.collabora_host,
             tls_verify_collabora: this.tls_verify_collabora,
@@ -540,6 +559,7 @@ export default {
       this.isLetsEncryptEnabled = config.lets_encrypt;
       this.isLetsEncryptCurrentlyEnabled = config.lets_encrypt;
       this.internalSmarthost = config.internal_smarthost;
+      this.exapps = config.exapps;
       this.running = config.running;
       this.installed = config.installed;
       this.is_collabora = config.is_collabora;

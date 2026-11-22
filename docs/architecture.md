@@ -16,9 +16,13 @@ flowchart LR
         A --> R[("Redis :6379")]
         P --> D
         P --> R
+        N -- "/exapps/ :8780" --> H["nextcloud-harp"]
     end
     A -- "accountprovider = 10.0.2.2" --> L["ldapproxy"]
     A -- "SMTP" --> S["cluster smarthost"]
+    H -- "podman socket" --> K["nextcloud-podman-api"]
+    K -- "creates" --> E["ExApp containers, host network"]
+    E -- "FRP tunnel 127.0.0.1:HARP_FRP_PORT" --> H
 ```
 
 The module is rootless. All containers share one pod, so they talk over `127.0.0.1`. The pod
@@ -27,6 +31,9 @@ routes `host` to it, with HTTP to HTTPS redirect.
 
 The pod uses `slirp4netns:allow_host_loopback=true`. Inside the pod, `10.0.2.2` is the
 loopback of the node. Nextcloud reaches ldapproxy there.
+
+The module asks NS8 for a second port, `HARP_FRP_PORT`. The pod publishes the FRP port of
+HaRP on `127.0.0.1:${HARP_FRP_PORT}`, see [External Apps](#external-apps).
 
 ## Components
 
@@ -37,6 +44,7 @@ loopback of the node. Nextcloud reaches ldapproxy there.
 | `nextcloud-db` | `mariadb:12.3` | database |
 | `nextcloud-redis` | `redis:8-alpine` | file locking and cache, append-only file |
 | `nextcloud-notify_push` | `ghcr.io/stephdl/nextcloud-next-notify_push`, built from source | push notifications to the clients |
+| `nextcloud-harp` | `ghcr.io/nextcloud/nextcloud-appapi-harp` | deploy daemon and proxy of External Apps, only when `exapps` is on |
 
 The app image adds to the official one:
 
@@ -69,6 +77,8 @@ nginx mounts the volumes of `nextcloud-app` to serve static files.
 | `nextcloud-app.service` | Nextcloud. Starts after the database and Redis. |
 | `nextcloud-nginx.service` | nginx |
 | `nextcloud-notify_push.service` | notify_push. `setup-notify_push` writes its environment before start. |
+| `nextcloud-podman-api.service` | rootless podman API on `%t/nextcloud-podman.sock`. Only when `exapps` is on. |
+| `nextcloud-harp.service` | HaRP, in the pod. `PartOf=nextcloud.service`, so a pod restart restarts it. Only when `exapps` is on. |
 
 `nextcloud-app.service` does more than run the container:
 
@@ -90,7 +100,8 @@ So a restart of `nextcloud-app` applies the smarthost and the user domain again.
 | `notify_push.env` | `setup-notify_push` | database and Redis URLs of notify_push |
 | `nginx.conf` | `create-module`, each update | nginx configuration |
 | `zzz_nethserver.conf` | `create-module`, each update | PHP-FPM pool |
-| `environment` | NS8 core | image URLs, `TCP_PORT`, and `LDAP_MAIL_ATTRIBUTE` when set |
+| `harp.env` | `setup-harp` | shared key of HaRP and AppAPI, mode 600 |
+| `environment` | NS8 core, `setup-harp` | image URLs, `TCP_PORT`, `HARP_FRP_PORT`, and `LDAP_MAIL_ATTRIBUTE` when set |
 
 The database and Redis passwords are fixed in
 [20configure](../imageroot/actions/configure-module/20configure). Neither service listens
@@ -106,6 +117,7 @@ outside the pod.
 | `20configure` | writes `config.env`, `database.env`, `config.json` |
 | `50systemd` | enables and restarts every unit |
 | `80configure_collabora` | installs and sets `richdocuments` when `collabora_host` is set |
+| `85exapps` | starts or stops HaRP, registers the `harp_proxy` daemon. See [External Apps](#external-apps). |
 | `90apps_management` | disables `logreader`, installs notify_push and sets its endpoint to `https://host/push` |
 
 At the first start, the official entrypoint installs Nextcloud with `NEXTCLOUD_ADMIN_USER`
@@ -114,8 +126,8 @@ Nextcloud. Nextcloud ignores these two variables once installed.
 
 ## Backup and restore
 
-The backup holds `volumes/nextcloud-app-data`, `state/restore/dump.sql` and
-`state/config.json` ([state-include.conf](../imageroot/etc/state-include.conf)).
+The backup holds `volumes/nextcloud-app-data`, `state/restore/dump.sql`, `state/config.json`
+and `state/harp.env` ([state-include.conf](../imageroot/etc/state-include.conf)).
 `module-dump-state` writes the dump with `mariadb-dump --all-databases` when MariaDB runs.
 `module-cleanup-state` deletes it after the backup.
 
@@ -136,7 +148,7 @@ runs files there only when its data volume is empty, so on a new or restored ins
 | `10expand_config` | writes `nginx.conf` and `zzz_nethserver.conf` again |
 | `15update_settings` | sets `trusted_proxies` and `maintenance_window_start`, disables `logreader` |
 | `17smarthost_switch` | adds `internal_smarthost` to old configurations |
-| `20restart` | restarts every unit, then waits for the Nextcloud upgrade lock |
+| `20restart` | restarts every active unit, then waits for the Nextcloud upgrade lock |
 | `50bind_user_domain` | binds the user domain when the core did not record it |
 
 ## Events
@@ -150,7 +162,7 @@ runs files there only when its data volume is empty, so on a new or restored ins
 
 | Action | Purpose |
 | --- | --- |
-| `create-module` | write `nginx.conf` and `zzz_nethserver.conf` |
+| `create-module` | run `setup-harp`, write `nginx.conf` and `zzz_nethserver.conf` |
 | `configure-module` | see [Install sequence](#install-sequence) |
 | `get-configuration` | `config.json` plus `lets_encrypt` from the route, installed and running state, and the Collabora instances of the cluster |
 | `get-facts` | count of all users and of active users |
@@ -159,6 +171,47 @@ runs files there only when its data volume is empty, so on a new or restored ins
 
 All configuration fields are in
 [configure-module/validate-input.json](../imageroot/actions/configure-module/validate-input.json).
+
+## External Apps
+
+AppAPI deploys External Apps through HaRP. When `exapps` is on, `85exapps` enables
+`nextcloud-podman-api.service` and `nextcloud-harp.service`, then registers HaRP:
+
+```sh
+occ app_api:daemon:register harp_proxy HaRP docker-install http localhost:8780 \
+    http://127.0.0.1:${TCP_PORT} --net host --harp \
+    --harp_frp_address 127.0.0.1:${HARP_FRP_PORT} --harp_shared_key <key> --set-default
+```
+
+HaRP runs in the pod, so nginx and Nextcloud reach it on `localhost:8780`. It creates the
+ExApp containers through the podman socket, outside the pod. They use the host network. Each
+ExApp opens an FRP tunnel to `127.0.0.1:${HARP_FRP_PORT}`, and HaRP sends the requests of
+Nextcloud through it. Two instances on the same node do not collide: every ExApp listens on
+the loopback of its own tunnel.
+
+ExApps call Nextcloud on `http://127.0.0.1:${TCP_PORT}`. nginx listens on this port inside
+the pod too, so the same URL works from the pod and from the host, without the public
+certificate. `85exapps` adds `127.0.0.1` to `trusted_domains`.
+
+Choices that did not work:
+
+- `--net container:<pod infra>`: HaRP accepts only `host`, `bridge` or a network name.
+- A dedicated podman network: with pasta, its containers cannot reach the loopback of the
+  node.
+- The public URL as `nextcloud_url`: it fails with a self-signed certificate.
+
+Rootless podman does not start `unless-stopped` containers after a reboot.
+`nextcloud-harp.service` starts the `nc_app_*` containers after HaRP, except those with
+`StoppedByUser=true`: AppAPI stopped them because the admin disabled the ExApp.
+
+Turning the feature off stops the running ExApps with `podman stop`, which also sets
+`StoppedByUser`. `85exapps` writes their IDs in `state/exapps-running` and starts them
+again when the feature is turned back on.
+
+`85exapps` waits for the `nextcloud-init-sync.lock` of the entrypoint before it calls `occ`.
+When the ports of the registered daemon differ from the current ones, it unregisters the
+daemon and registers it again. If AppAPI refuses, because ExApps still use the daemon, the
+task fails with a message.
 
 ## Helper commands
 
@@ -169,6 +222,7 @@ Run them with `runagent -m nextcloud-next1 <command>`.
 | `occ` | run `occ` as `www-data` in `nextcloud-app` |
 | `nextcloud-db-optimize` | slow database fixes reported by `occ setupchecks` |
 | `setup-ldap`, `setup-smtp`, `discover-smarthost`, `setup-notify_push`, `wait-startup` | called by the units, not by hand |
+| `setup-harp` | called by `create-module`, not by hand |
 
 `configure-module/30traefik` and `destroy-module/30traefik` are empty placeholders. They
 hide files of older images, see NethServer/dev#7058.

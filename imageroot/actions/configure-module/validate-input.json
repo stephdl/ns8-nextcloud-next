@@ -11,7 +11,8 @@
       "collabora_host":"collabora.nethserver.org",
       "tls_verify_collabora": true,
       "password": "Nethesis,1234",
-      "internal_smarthost": false
+      "internal_smarthost": false,
+      "exapps": false
     }
   ],
   "type": "object",
@@ -51,6 +52,11 @@
       "type": "boolean",
       "title": "Internal smarthost",
       "description": "If true, email sending is managed from the Nextcloud admin panel. If false, the cluster smarthost settings are applied, and Nextcloud SMTP server settings are removed when no cluster smarthost is configured."
+    },
+    "exapps": {
+      "type": "boolean",
+      "title": "External Apps",
+      "description": "If true, run the HaRP deploy daemon so AppAPI can install External Apps as containers."
     },
     "password": {
       "description": "Password for admin user. Default is 'Nethesis,1234'",
