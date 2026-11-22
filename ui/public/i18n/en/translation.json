@@ -5,8 +5,6 @@
     },
     "status": {
         "title": "Status",
-        "app_instance": "App instance",
-        "services": "Service | Services",
         "app_images": "App image | App images",
         "app_volumes": "App volume | App volumes",
         "installation_node": "Installation node",
@@ -21,7 +19,15 @@
         "nextcloud_webapp": "Nextcloud webapp",
         "not_configured": "Not configured",
         "open_nextcloud_webapp": "Open Nextcloud",
-        "configure": "Configure"
+        "configure": "Configure",
+        "application": "Application",
+        "restart_application": "Restart application",
+        "restart_module_warning": "Are you sure you want to restart {name}? The service will be briefly unavailable during the restart.",
+        "go_to_node_details": "Go to node details",
+        "failed_services": "Failed services",
+        "all_services_running": "All services are running",
+        "search_images": "Search images",
+        "search_volumes": "Search volumes"
     },
     "settings": {
         "title": "Settings",
@@ -61,7 +67,10 @@
         "get-status": "Get status",
         "get-configuration": "Get configuration",
         "configure-module": "Configure module",
-        "get-module-info": "Get module info"
+        "get-module-info": "Get module info",
+        "list-backup-repositories": "List backup repositories",
+        "list-backups": "List backups",
+        "restart-module": "Restart module"
     },
     "error": {
         "error": "Error",
