@@ -37,7 +37,7 @@ buildah config --entrypoint=/ \
     --label="org.nethserver.rootfull=0" \
     --label="org.nethserver.volumes=nextcloud-app-data" \
     --label="org.nethserver.min-core=3.20.1" \
-    --label="org.nethserver.images=docker.io/redis:7.4.5-alpine docker.io/mariadb:10.6.28 docker.io/nginx:1.30.7-alpine ${repobase}/nextcloud-next-app:${IMAGETAG} ${repobase}/nextcloud-next-notify_push:${IMAGETAG}" \
+    --label="org.nethserver.images=docker.io/redis:8.10.3-alpine docker.io/mariadb:12.3.3 docker.io/nginx:1.30.7-alpine ${repobase}/nextcloud-next-app:${IMAGETAG} ${repobase}/nextcloud-next-notify_push:${IMAGETAG}" \
     "${container}"
 # Commit the image
 buildah commit "${container}" "${repobase}/${reponame}"

@@ -5,31 +5,60 @@
   ],
   "packageRules": [
     {
-      "matchDatasources": ["docker"],
-      "matchPackagePatterns": ["notify_push"],
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackagePatterns": [
+        "notify_push"
+      ],
       "groupName": "notify_push",
       "versioning": "semver"
     },
     {
-      "matchPaths": ["notify_push/Dockerfile"],
-      "matchPackageNames": ["notify_push"],
+      "matchPaths": [
+        "notify_push/Dockerfile"
+      ],
+      "matchPackageNames": [
+        "notify_push"
+      ],
       "enabled": true,
       "automerge": false
     },
     {
-      "matchDatasources": ["docker"],
-      "matchPackageNames": ["nginx"],
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "nginx"
+      ],
       "allowedVersions": "1.30.*"
     },
     {
-      "matchDatasources": ["docker"],
-      "matchPackageNames": ["redis"],
-      "allowedVersions": "7.4.*"
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "redis"
+      ],
+      "allowedVersions": "8.*"
     },
     {
-      "matchDatasources": ["docker"],
-      "matchPackageNames": ["mariadb"],
-      "allowedVersions": "10.6.*"
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "mariadb"
+      ],
+      "allowedVersions": "12.3.*"
+    },
+    {
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "nextcloud"
+      ],
+      "allowedVersions": "35.*"
     }
   ],
   "regexManagers": [

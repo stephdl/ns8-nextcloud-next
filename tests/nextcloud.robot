@@ -77,6 +77,13 @@ Create user u1 with a file
     Should Be Equal    ${code}    201
     Read the file of u1
 
+Check the running versions
+    ${out} =    Execute Command    runagent -m ${module_id} occ status --output=json
+    &{status} =    Evaluate    json.loads($out)    modules=json
+    Should Start With    ${status.versionstring}    35.
+    ${out} =    Execute Command    runagent -m ${module_id} podman exec nextcloud-db mariadb --version
+    Should Contain    ${out}    12.3.
+
 Update nextcloud to the image under test
     Skip If    '${SCENARIO}' != 'update'    scenario is ${SCENARIO}, nothing to update
     ${rc} =    Execute Command

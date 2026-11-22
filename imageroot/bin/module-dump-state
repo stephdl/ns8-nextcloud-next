@@ -23,5 +23,5 @@
 systemctl --user -q is-active nextcloud-db
 
 if [ $? -eq 0 ]; then
-    podman exec nextcloud-db sh -c 'exec mysqldump --all-databases -uroot -p"nextcloud"' > restore/dump.sql
+    podman exec nextcloud-db sh -c 'exec mariadb-dump --all-databases -uroot -p"nextcloud"' > restore/dump.sql
 fi
