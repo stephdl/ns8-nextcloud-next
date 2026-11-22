@@ -19,6 +19,12 @@ occ app:disable logreader
 # added for nextcloud 28 (1.0.8)
 # end
 
+# NS8 has no Docker daemon to deploy external apps
+occ app:disable app_api
+
+# a single PHP server, so a fixed id is enough to silence the setup check
+occ config:system:set serverid --value=1 --type=integer
+
 # advertise the public push endpoint to clients, see https://github.com/NethServer/dev/issues/8272
 # only replace the old internal value, keep an endpoint set by hand
 host=$(jq -r '.host // empty' config.json 2>/dev/null)
