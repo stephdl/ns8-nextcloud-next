@@ -160,7 +160,8 @@ Things to know before you turn it on:
   user, on the disk of the node.
 - ExApps run on the CPU. There is no GPU access. Translation works well, a local language
   model answers in minutes.
-- ExApps and their data are not in the backup. Install them again after a restore.
+- ExApps and their data are not in the backup. A restore removes them from Nextcloud.
+  Install them again from the app store.
 - HaRP controls the containers of the module user through the podman API. It runs without
   SELinux isolation on Rocky Linux, because SELinux blocks the socket otherwise.
 

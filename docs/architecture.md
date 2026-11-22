@@ -209,9 +209,10 @@ Turning the feature off stops the running ExApps with `podman stop`, which also 
 again when the feature is turned back on.
 
 `85exapps` waits for the `nextcloud-init-sync.lock` of the entrypoint before it calls `occ`.
-When the ports of the registered daemon differ from the current ones, it unregisters the
-daemon and registers it again. If AppAPI refuses, because ExApps still use the daemon, the
-task fails with a message.
+When the ports of the registered daemon differ from the current ones, it removes the
+registered ExApps with `--force`, then unregisters the daemon and registers it again. This
+happens after every restore: the new instance gets new ports, and the ExApp containers are
+not in the backup, so the ExApps of the restored database cannot run anyway.
 
 ## Helper commands
 

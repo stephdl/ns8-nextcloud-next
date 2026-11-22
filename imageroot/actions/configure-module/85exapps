@@ -50,13 +50,15 @@ registered() {
         'fromjson? | .[] | select(.name == $d) | [.deploy_config.nextcloud_url, .deploy_config.harp.frp_address]'
 }
 
-# Ports change when a backup is restored on another node
+# A restore always gets new ports. The ExApp containers are not in the backup, so the
+# ExApps registered in the restored database are dead: drop them, the admin installs them again.
 current=$(registered)
 if [[ -n "${current}" && "${current}" != "$(jq -nc --arg u "${nc_url}" --arg f "${frp_address}" '[$u, $f]')" ]]; then
-    if ! occ app_api:daemon:unregister "${daemon}"; then
-        echo "Daemon ${daemon} uses old ports. Remove its External Apps, then save the settings again."
-        exit 1
-    fi
+    for app in $(occ app_api:app:list | tr -d '\r' | sed -n 's/^\([a-z0-9_-]*\) (.*/\1/p'); do
+        echo "Removing External App ${app}, its container was not restored"
+        occ app_api:app:unregister "${app}" --force --silent || :
+    done
+    occ app_api:daemon:unregister "${daemon}"
 fi
 
 if [[ -z "$(registered)" ]]; then
