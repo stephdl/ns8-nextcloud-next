@@ -10,9 +10,6 @@
 #  Failed to get an iterator for log entries: Logreader application only supports "file" log_type
 occ app:disable logreader
 
-# NS8 has no Docker daemon to deploy external apps
-occ app:disable app_api
-
 # a single PHP server, so a fixed id is enough to silence the setup check
 occ config:system:set serverid --value=1 --type=integer
 
