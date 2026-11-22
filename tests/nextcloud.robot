@@ -28,14 +28,27 @@ Nextcloud is up to date
     Should Not Be True    ${status.maintenance}
     Should Not Be True    ${status.needsDbUpgrade}
 
+Enable the stephdl forge
+    # The module is published there, not in the default NS8 repositories.
+    ${rc} =    Execute Command
+    ...    api-cli run add-repository --data '{"name":"stephdl","url":"https://forge.de-labrusse.fr/ns8/updates/","status":true}'
+    ...    return_rc=True  return_stdout=False
+    Should Be Equal As Integers    ${rc}  0
+
 Read the file of u1
     ${out} =    Execute Command    curl -sk -f -u u1:${u1_password} -H "Host: nextcloud.dom.test" ${nc_url}/remote.php/dav/files/u1/upgrade.txt
     Should Be Equal    ${out}    upgrade-test-${module_id}
 
 *** Test Cases ***
 Check if nextcloud is installed correctly
-    # The update scenario starts from the NS8 stable release, then upgrades it below
-    ${image} =    Set Variable If    '${SCENARIO}' == 'update'    nextcloud    ${IMAGE_URL}
+    # The update scenario starts from the release published in the stephdl forge,
+    # then upgrades it to the image under test through update-module below.
+    IF    '${SCENARIO}' == 'update'
+        Enable the stephdl forge
+        ${image} =    Set Variable    nextcloud-next
+    ELSE
+        ${image} =    Set Variable    ${IMAGE_URL}
+    END
     ${output}  ${rc} =    Execute Command    add-module ${image} 1
     ...    return_rc=True
     Should Be Equal As Integers    ${rc}  0
@@ -77,13 +90,6 @@ Create user u1 with a file
     Should Be Equal    ${code}    201
     Read the file of u1
 
-Check the running versions
-    ${out} =    Execute Command    runagent -m ${module_id} occ status --output=json
-    &{status} =    Evaluate    json.loads($out)    modules=json
-    Should Start With    ${status.versionstring}    35.
-    ${out} =    Execute Command    runagent -m ${module_id} podman exec nextcloud-db mariadb --version
-    Should Contain    ${out}    12.3.
-
 Update nextcloud to the image under test
     Skip If    '${SCENARIO}' != 'update'    scenario is ${SCENARIO}, nothing to update
     ${rc} =    Execute Command
@@ -111,7 +117,18 @@ Check u1 and its file survive the update
     Should Be Equal As Integers    ${rc}  0
     Wait Until Keyword Succeeds    10 times    10 seconds    Read the file of u1
 
+Check the running versions
+    # After the update in the update scenario, so both scenarios check the image under test
+    ${out} =    Execute Command    runagent -m ${module_id} occ status --output=json
+    &{status} =    Evaluate    json.loads($out)    modules=json
+    Should Start With    ${status.versionstring}    35.
+    ${out} =    Execute Command    runagent -m ${module_id} podman exec nextcloud-db mariadb --version
+    Should Contain    ${out}    12.3.
+
 Check if nextcloud is removed correctly
     ${rc} =    Execute Command    remove-module --no-preserve ${module_id}
     ...    return_rc=True  return_stdout=False
     Should Be Equal As Integers    ${rc}  0
+    IF    '${SCENARIO}' == 'update'
+        Execute Command    api-cli run remove-repository --data '{"name":"stephdl"}'
+    END
