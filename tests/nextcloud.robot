@@ -125,6 +125,22 @@ Check the running versions
     ${out} =    Execute Command    runagent -m ${module_id} podman exec nextcloud-db mariadb --version
     Should Contain    ${out}    12.3.
 
+Check External Apps can be enabled
+    ${rc} =    Execute Command    api-cli run module/${module_id}/configure-module --data '{"host": "nextcloud.dom.test", "lets_encrypt": false, "domain": "", "password": "Nethesis,1234", "internal_smarthost": false, "exapps": true}'
+    ...    return_rc=True  return_stdout=False
+    Should Be Equal As Integers    ${rc}  0
+    ${out} =    Execute Command    runagent -m ${module_id} systemctl --user is-active nextcloud-podman-api nextcloud-harp
+    Should Be Equal    ${out}    active\nactive
+    ${out} =    Execute Command    runagent -m ${module_id} occ app_api:daemon:list --output=json
+    Should Contain    ${out}    "name":"harp_proxy"
+
+Check External Apps can be disabled
+    ${rc} =    Execute Command    api-cli run module/${module_id}/configure-module --data '{"host": "nextcloud.dom.test", "lets_encrypt": false, "domain": "", "password": "Nethesis,1234", "internal_smarthost": false, "exapps": false}'
+    ...    return_rc=True  return_stdout=False
+    Should Be Equal As Integers    ${rc}  0
+    ${out} =    Execute Command    runagent -m ${module_id} systemctl --user is-active nextcloud-podman-api nextcloud-harp
+    Should Be Equal    ${out}    inactive\ninactive
+
 Check if nextcloud is removed correctly
     ${rc} =    Execute Command    remove-module --no-preserve ${module_id}
     ...    return_rc=True  return_stdout=False

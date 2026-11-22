@@ -1,0 +1,31 @@
+[Unit]
+Description=Podman nextcloud-harp.service
+Requires=nextcloud-podman-api.service
+BindsTo=nextcloud.service
+# A pod restart removes the container, so restart with it
+PartOf=nextcloud.service
+After=nextcloud.service nextcloud-podman-api.service
+
+[Service]
+Environment=PODMAN_SYSTEMD_UNIT=%n
+EnvironmentFile=%E/state/environment
+Restart=always
+TimeoutStopSec=70
+ExecStartPre=/bin/rm -f %t/nextcloud-harp.pid %t/nextcloud-harp.ctr-id
+# SELinux blocks the mounted socket on Rocky Linux, the option has no effect on Debian
+ExecStart=/usr/bin/podman run --conmon-pidfile %t/nextcloud-harp.pid --cidfile %t/nextcloud-harp.ctr-id --cgroups=no-conmon \
+  --pod-id-file %t/nextcloud.pod-id \
+  --replace -d --name nextcloud-harp \
+  --security-opt label=disable \
+  -v %t/nextcloud-podman.sock:/var/run/docker.sock \
+  --env-file %E/state/harp.env \
+  ${NEXTCLOUD_APPAPI_HARP_IMAGE}
+# Rootless podman does not restart "unless-stopped" containers after a reboot
+ExecStartPost=-/bin/bash -c "/usr/bin/podman ps -aq --filter name=^nc_app_ | xargs -r /usr/bin/podman start"
+ExecStop=/usr/bin/podman stop --ignore --cidfile %t/nextcloud-harp.ctr-id -t 10
+ExecStopPost=/usr/bin/podman rm --ignore -f --cidfile %t/nextcloud-harp.ctr-id
+PIDFile=%t/nextcloud-harp.pid
+Type=forking
+
+[Install]
+WantedBy=default.target

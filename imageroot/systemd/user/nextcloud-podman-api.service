@@ -1,0 +1,13 @@
+[Unit]
+Description=Podman API for the HaRP deploy daemon of External Apps
+
+[Service]
+Type=exec
+ExecStart=/usr/bin/podman system service --time=0 unix://%t/nextcloud-podman.sock
+ExecStopPost=/bin/rm -f %t/nextcloud-podman.sock
+# Stop only the API server, not the External App containers it created
+KillMode=process
+Restart=always
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,57 @@
+#!/bin/bash
+
+#
+# Copyright (C) 2026 Nethesis S.r.l.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+# Turn External Apps (ExApps) on or off: HaRP deploys them through the rootless podman API
+
+set -e
+exec 1>&2
+
+daemon=harp_proxy
+
+if [[ "$(jq -r '.exapps // false' config.json)" != "true" ]]; then
+    systemctl --user disable --now nextcloud-harp.service nextcloud-podman-api.service
+    # Keep the ExApps and their data, so turning the feature on again restores them
+    podman ps -q --filter name=^nc_app_ | xargs -r podman stop
+    exit 0
+fi
+
+systemctl --user enable --now nextcloud-podman-api.service nextcloud-harp.service
+
+occ app:enable app_api
+
+# The occ wrapper runs with a terminal, which adds carriage returns
+domains=$(occ config:system:get trusted_domains --output=json | tr -d '\r')
+# AppAPI calls Nextcloud on the loopback URL
+if ! jq -e '[.[]] | index("127.0.0.1")' <<<"${domains}" >/dev/null; then
+    # The list comes back as an object when its indexes have gaps
+    index=$(jq 'if type == "array" then length else ([keys[] | tonumber] | max + 1) end' <<<"${domains}")
+    occ config:system:set trusted_domains "${index}" --value=127.0.0.1
+fi
+
+nc_url="http://127.0.0.1:${TCP_PORT}"
+frp_address="127.0.0.1:${HARP_FRP_PORT}"
+
+registered() {
+    # With no daemon, the JSON output is a plain text sentence
+    occ app_api:daemon:list --output=json | tr -d '\r' | jq -cR --arg d "${daemon}" \
+        'fromjson? | .[] | select(.name == $d) | [.deploy_config.nextcloud_url, .deploy_config.harp.frp_address]'
+}
+
+# Ports change when a backup is restored on another node
+current=$(registered)
+if [[ -n "${current}" && "${current}" != "$(jq -nc --arg u "${nc_url}" --arg f "${frp_address}" '[$u, $f]')" ]]; then
+    occ app_api:daemon:unregister "${daemon}" || \
+        echo "Daemon ${daemon} uses old ports. Remove its External Apps, then save the settings again."
+fi
+
+if [[ -z "$(registered)" ]]; then
+    occ app_api:daemon:register "${daemon}" "HaRP" docker-install http localhost:8780 \
+        "${nc_url}" --net host --harp \
+        --harp_frp_address "${frp_address}" \
+        --harp_shared_key "$(sed -n 's/^HP_SHARED_KEY=//p' harp.env)" \
+        --set-default
+fi

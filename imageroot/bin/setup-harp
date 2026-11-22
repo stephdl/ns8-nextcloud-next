@@ -1,0 +1,23 @@
+#!/usr/bin/env python3
+
+#
+# Copyright (C) 2026 Nethesis S.r.l.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+# Prepare HaRP, the deploy daemon of External Apps, even when the feature is off:
+# its tunnel port must exist before the pod starts, and the backup includes harp.env
+
+import os
+import secrets
+import agent
+
+if not os.environ.get('HARP_FRP_PORT'):
+    agent.set_env('HARP_FRP_PORT', os.environ['TCP_PORTS'].split(',')[1])
+
+if not os.path.exists('harp.env'):
+    agent.write_envfile('harp.env', {
+        'HP_SHARED_KEY': secrets.token_hex(32),
+        'NC_INSTANCE_URL': 'http://127.0.0.1',
+    })
+    os.chmod('harp.env', 0o600)

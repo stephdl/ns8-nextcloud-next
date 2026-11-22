@@ -47,7 +47,9 @@
         "admin_password_tooltip": "The user 'admin' is the internal administrator of Nextcloud. This password is used to authenticate the 'admin' user in the Nextcloud web interface.",
         "host_pattern": "Must be a valid fully qualified domain name",
         "host_format": "Must be a valid fully qualified domain name",
-        "internal_smarthost": "Manage email sending from Nextcloud admin panel"
+        "internal_smarthost": "Manage email sending from Nextcloud admin panel",
+        "exapps": "External Apps",
+        "exapps_tooltip": "Lets Nextcloud install External Apps, like local AI, translation or speech to text. Each app runs in its own container. Images often take several GB of disk space, are not included in the backup, and run on the CPU only."
     },
     "about": {
         "title": "About"
