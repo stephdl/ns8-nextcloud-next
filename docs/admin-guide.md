@@ -160,8 +160,11 @@ Things to know before you turn it on:
   user, on the disk of the node.
 - ExApps run on the CPU. There is no GPU access. Translation works well, a local language
   model answers in minutes.
-- ExApps and their data are not in the backup. A restore removes them from Nextcloud.
-  Install them again from the app store.
+- ExApps and their data are not in the backup. After a restore, the module installs them
+  again from the app store in the background, with their enabled or disabled state. Their
+  data starts empty. An ExApp not in the app store, or a node without internet, needs a
+  manual install. Follow it with
+  `runagent -m nextcloud-next1 journalctl --user -u nextcloud-exapps-reinstall`.
 - HaRP controls the containers of the module user through the podman API. It runs without
   SELinux isolation on Rocky Linux, because SELinux blocks the socket otherwise.
 

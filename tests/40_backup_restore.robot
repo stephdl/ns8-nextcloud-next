@@ -20,6 +20,11 @@ The restore has run
     # Without it the checks below would pass against the old module.
     Should Be True    ${restored}    the restore did not complete
 
+The reinstall has finished
+    ${rc} =    Execute Command    runagent -m ${module_id} systemctl --user is-active nextcloud-exapps-reinstall
+    ...    return_rc=True    return_stdout=False
+    Should Not Be Equal As Integers    ${rc}    0
+
 *** Test Cases ***
 Install an External App before the backup
     Run task    module/${module_id}/configure-module    ${configure_exapps_on}    decode_json=${FALSE}
@@ -106,8 +111,12 @@ The HaRP daemon uses the ports of the restored instance
     Should Contain    ${out}    "nextcloud_url":"http:\\/\\/127.0.0.1:${port}"
     Should Contain    ${out}    "frp_address":"127.0.0.1:${frp}"
 
-The External Apps that lost their container are removed
+The External Apps are installed again in the background
     [Setup]    The restore has run
+    # test-deploy is not in the app store, so its reinstall fails and stays listed
+    Wait Until Keyword Succeeds    10 minutes    10 seconds    The reinstall has finished
+    ${out} =    Execute Command    runagent -m ${module_id} cat exapps-reinstall
+    Should Contain    ${out}    test-deploy enabled
     ${out} =    Execute Command    runagent -m ${module_id} occ app_api:app:list
     Should Not Contain    ${out}    test-deploy
 

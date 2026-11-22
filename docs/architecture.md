@@ -209,10 +209,16 @@ Turning the feature off stops the running ExApps with `podman stop`, which also 
 again when the feature is turned back on.
 
 `85exapps` waits for the `nextcloud-init-sync.lock` of the entrypoint before it calls `occ`.
-When the ports of the registered daemon differ from the current ones, it removes the
-registered ExApps with `--force`, then unregisters the daemon and registers it again. This
-happens after every restore: the new instance gets new ports, and the ExApp containers are
-not in the backup, so the ExApps of the restored database cannot run anyway.
+When the ports of the registered daemon differ from the current ones, it writes the
+registered ExApps and their state in `state/exapps-reinstall`, removes them with `--force`,
+then unregisters the daemon and registers it again. This happens after every restore: the
+new instance gets new ports, and the ExApp containers are not in the backup, so the ExApps
+of the restored database cannot run anyway.
+
+`85exapps` then starts the transient unit `nextcloud-exapps-reinstall`, which runs
+`reinstall-exapps` in the background. It installs each ExApp again from the app store,
+disables the ones that were disabled, and keeps in `exapps-reinstall` only those that failed.
+The restore does not wait for the image pulls.
 
 ## Helper commands
 
@@ -224,6 +230,7 @@ Run them with `runagent -m nextcloud-next1 <command>`.
 | `nextcloud-db-optimize` | slow database fixes reported by `occ setupchecks` |
 | `setup-ldap`, `setup-smtp`, `discover-smarthost`, `setup-notify_push`, `wait-startup` | called by the units, not by hand |
 | `setup-harp` | called by `create-module`, not by hand |
+| `reinstall-exapps` | started by `85exapps` after a restore, not by hand |
 
 `configure-module/30traefik` and `destroy-module/30traefik` are empty placeholders. They
 hide files of older images, see NethServer/dev#7058.
