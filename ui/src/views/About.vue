@@ -56,7 +56,15 @@
             </div>
             <div class="key-value-setting">
               <span class="label">{{ core.$t("common.version") }}</span>
-              <span class="value">{{ version }} ({{ app.upstream_name }})</span>
+              <span class="value">{{ version }}</span>
+            </div>
+            <div
+              v-for="component in components"
+              :key="component.name"
+              class="key-value-setting"
+            >
+              <span class="label">{{ component.name }}</span>
+              <span class="value">{{ component.version }}</span>
             </div>
             <div class="key-value-setting">
               <span class="label">{{
@@ -178,6 +186,19 @@ export default {
   },
   computed: {
     ...mapState(["core", "appName", "instanceName"]),
+    components() {
+      // build-images.sh passes the versions read from the image tags
+      return [
+        { name: "Nextcloud", version: process.env.VUE_APP_NEXTCLOUD_VERSION },
+        { name: "MariaDB", version: process.env.VUE_APP_MARIADB_VERSION },
+        { name: "Redis", version: process.env.VUE_APP_REDIS_VERSION },
+        { name: "nginx", version: process.env.VUE_APP_NGINX_VERSION },
+        {
+          name: "notify_push",
+          version: process.env.VUE_APP_NOTIFY_PUSH_VERSION,
+        },
+      ].filter((component) => component.version);
+    },
   },
   created() {
     this.getModuleInfo();

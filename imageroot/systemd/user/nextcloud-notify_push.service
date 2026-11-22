@@ -13,7 +13,7 @@ ExecStart=/usr/bin/podman run --conmon-pidfile %t/nextcloud-notify_push.pid --ci
   --pod-id-file %t/nextcloud.pod-id \
   --replace -d --name nextcloud-notify_push \
   --env-file %E/state/notify_push.env \
-   ${NEXTCLOUD_NOTIFY_PUSH_IMAGE}
+   ${NEXTCLOUD_NEXT_NOTIFY_PUSH_IMAGE}
 ExecStop=/usr/bin/podman stop --ignore --cidfile %t/nextcloud-notify_push.ctr-id -t 10
 ExecStopPost=/usr/bin/podman rm --ignore -f --cidfile %t/nextcloud-notify_push.ctr-id
 PIDFile=%t/nextcloud-notify_push.pid
