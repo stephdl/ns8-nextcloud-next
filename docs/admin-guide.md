@@ -49,6 +49,7 @@ The first run installs Nextcloud and takes a few minutes.
 | `password` | no | Password of the `admin` account, used only at the first install. Default `Nethesis,1234`. |
 | `collabora_host` | no | Host name of a Collabora instance. See [Collabora Online](#collabora-online). |
 | `tls_verify_collabora` | no | Verify the certificate of Collabora. |
+| `exapps` | no | Run the deploy daemon of External Apps. Default `false`. See [External Apps](#external-apps). |
 
 Each run of `configure-module` restarts every container of the module. Users lose their
 session for about a minute.
@@ -134,6 +135,31 @@ app (`richdocuments`) and points it to `https://<collabora_host>`. Leave
 `tls_verify_collabora` off only when Collabora has a self-signed certificate.
 
 Clearing the field does not disable the app. Disable it in Nextcloud if needed.
+
+## External Apps
+
+External Apps (ExApps) are Nextcloud apps shipped as containers, mostly in Python. Most of
+them run AI on the server, without sending data to an outside service. Examples: Local
+Machine Translation (`translate2`), Speech-To-Text (`stt_whisper2`), the local model of
+Nextcloud Assistant (`llm2`).
+
+Turn on **External Apps** in Settings, or set `exapps` to `true`. The module then starts
+HaRP, the proxy of AppAPI, and registers it as the default deploy daemon `harp_proxy`.
+Install ExApps from the Nextcloud app store, under **External apps**, like any other app.
+
+Things to know before you turn it on:
+
+- The images are large. `translate2` takes about 3 GB. They live in the home of the module
+  user, on the disk of the node.
+- ExApps run on the CPU. There is no GPU access. Translation works well, a local language
+  model answers in minutes.
+- ExApps and their data are not in the backup. Install them again after a restore.
+- HaRP controls the containers of the module user through the podman API. It runs without
+  SELinux isolation on Rocky Linux, because SELinux blocks the socket otherwise.
+
+Turning the feature off stops HaRP and the ExApps. Their containers and data stay, so
+turning it on again brings them back. To remove an ExApp for good, remove it in Nextcloud
+first.
 
 ## Two-factor authentication
 
@@ -225,7 +251,8 @@ The restored instance keeps the same host name. When the old instance still runs
 answer on the same name and Traefik picks one. Remove the old instance, or give the new one
 another host name.
 
-Not restored: `LDAP_MAIL_ATTRIBUTE` and changes to `zzz_nethserver.conf`. Set them again.
+Not restored: `LDAP_MAIL_ATTRIBUTE`, changes to `zzz_nethserver.conf`, and External Apps.
+Set them again.
 
 ### Clone and move
 
