@@ -1,0 +1,86 @@
+#!/usr/bin/env python3
+
+#
+# Copyright (C) 2022 Nethesis S.r.l.
+# http://www.nethesis.it - nethserver@nethesis.it
+#
+# This script is part of NethServer.
+#
+# NethServer is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License,
+# or any later version.
+#
+# NethServer is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with NethServer.  If not, see COPYING.
+#
+
+#
+# Read configuration
+#
+
+import os
+import sys
+import json
+import agent
+import socket
+import subprocess
+
+try:
+    with open('config.json', 'r') as cf:
+        config = json.loads(cf.read())
+        config['lets_encrypt'] = agent.get_route(os.environ['MODULE_ID']).get('lets_encrypt', False)
+except:
+    config = {"lets_encrypt": False}
+
+
+try:
+    config['default_domain'] = socket.getfqdn().partition('.')[2]
+except:
+    config['default_domain'] = 'nethserver.test'
+
+# Check if Nextcloud is already installed
+try:
+    cmd = ['podman', 'exec', '--user', 'www-data', 'nextcloud-app', 'php', './occ', 'status', '--output', 'json']
+    p = subprocess.run(cmd, capture_output=True)
+    status = json.loads(p.stdout)
+    config["installed"] = status["installed"]
+except:
+    config["installed"] = False
+
+try:
+    p = subprocess.run(['systemctl', '--user', 'is-active', '-q', 'nextcloud'])
+    config['running'] = (p.returncode == 0)
+except:
+    config['running'] = False
+
+rdb = agent.redis_connect(privileged=False)
+# retrieve all url stored in redis for all collabora instances
+array_collabora = []
+for c in rdb.scan_iter('module/collabora*/environment'):
+    name = c.removeprefix('module/').removesuffix('/environment')
+    url = rdb.hget(c, 'TRAEFIK_HOST')
+    if url:
+        array_collabora.append({"name": name, "label": name+' ('+ url+')', "value": url})
+
+config["array_collabora"] = array_collabora
+
+# verify if collabora is installed on the cluster
+# propose in UI to link this nextcloud to collabora
+config["is_collabora"] = True if array_collabora else False
+
+# The first load of nextcloud json is empty of tls_verify_collabora
+# let's do a default value
+if "tls_verify_collabora" not in config:
+    config["tls_verify_collabora"] = False
+
+if "internal_smarthost" not in config:
+    config["internal_smarthost"] = False
+
+# Dump the configuration to stdout
+json.dump(config, fp=sys.stdout)

@@ -1,0 +1,48 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "local>NethServer/.github:ns8-automerge"
+  ],
+  "packageRules": [
+    {
+      "matchDatasources": ["docker"],
+      "matchPackagePatterns": ["notify_push"],
+      "groupName": "notify_push",
+      "versioning": "semver"
+    },
+    {
+      "matchPaths": ["notify_push/Dockerfile"],
+      "matchPackageNames": ["notify_push"],
+      "enabled": true,
+      "automerge": false
+    },
+    {
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["nginx"],
+      "allowedVersions": "1.30.*"
+    },
+    {
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["redis"],
+      "allowedVersions": "7.4.*"
+    },
+    {
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["mariadb"],
+      "allowedVersions": "10.6.*"
+    }
+  ],
+  "regexManagers": [
+    {
+      "fileMatch": [
+        "notify_push/Dockerfile"
+      ],
+      "matchStrings": [
+        "NOTIFY_PUSH_VERSION=\"(?<currentValue>\\d+\\.\\d+\\.\\d+)\""
+      ],
+      "datasourceTemplate": "github-tags",
+      "packageNameTemplate": "nextcloud/notify_push",
+      "versioningTemplate": "semver"
+    }
+  ]
+}

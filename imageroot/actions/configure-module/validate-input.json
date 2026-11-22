@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Configure nextcloud",
+  "$id": "http://nethserver.org/json-schema/task/input/nextcloud/configure",
+  "description": "Configure nextcloud",
+  "examples": [
+    {
+      "host": "nextcloud.myhost.local",
+      "lets_encrypt": true,
+      "domain": "ad.myhost.local",
+      "collabora_host":"collabora.nethserver.org",
+      "tls_verify_collabora": true,
+      "password": "Nethesis,1234",
+      "internal_smarthost": false
+    }
+  ],
+  "type": "object",
+  "required": [
+    "host",
+    "internal_smarthost"
+  ],
+  "properties": {
+    "host": {
+      "description": "Host name for Nextcloud, like 'nextcloud.nethserver.org'",
+      "format": "hostname",
+      "pattern": "\\.",
+      "type": "string",
+      "minLength": 1
+    },
+    "lets_encrypt": {
+      "type": "boolean",
+      "title": "Let's Encrypt certificate",
+      "description": "Request a valid Let's Encrypt certificate."
+    },
+    "domain": {
+      "description": "LDAP domain configured inside ldapproxy. If not present, or empty, Nextcloud will use internal database",
+      "format": "idn-hostname",
+      "type": "string"
+    },
+    "collabora_host": {
+      "description": "Host name for hostname, like 'collabora.nethserver.org'",
+      "format": "idn-hostname",
+      "type": "string"
+    },
+    "tls_verify_collabora": {
+      "type": "boolean",
+      "title": "Verify the certificate of collabora",
+      "description": "Request a valid certificate for collabora."
+    },
+    "internal_smarthost": {
+      "type": "boolean",
+      "title": "Internal smarthost",
+      "description": "If true, email sending is managed from the Nextcloud admin panel. If false, the cluster smarthost settings are applied, and Nextcloud SMTP server settings are removed when no cluster smarthost is configured."
+    },
+    "password": {
+      "description": "Password for admin user. Default is 'Nethesis,1234'",
+      "type": "string",
+      "minLenght": "1"
+    }
+  }
+}

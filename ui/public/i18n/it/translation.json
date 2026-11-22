@@ -1,0 +1,78 @@
+{
+    "error": {
+        "validation_error": "Errore di validazione",
+        "network_error": "Errore di rete",
+        "error": "Errore",
+        "404": "Risorsa non trovata",
+        "cannot_retrieve_installed_modules": "Impossibile elencare moduli installati",
+        "cannot_retrieve_module_info": "Impossibile recuperare info modulo",
+        "network_timeout": "Timeout di rete",
+        "generic_error": "Qualcosa è andato storto",
+        "401": "Autenticazione non valida",
+        "403": "Operazione non autorizzata",
+        "cannot_retrieve_configuration": "Impossibile recuperare la configurazione",
+        "password_invalid_chars": "La password non può contenere spazi ne i seguenti caratteri: ' \" ="
+    },
+    "common": {
+        "required": "Obbligatorio",
+        "work_in_progress": "In lavorazione"
+    },
+    "status": {
+        "title": "Stato",
+        "services": "Servizio | Servizi",
+        "node": "Nodo",
+        "name": "Nome",
+        "size": "Dimensione",
+        "created": "Creato",
+        "no_services": "Nessun servizio",
+        "no_images": "Nessuna immagine",
+        "no_volumes": "Nessun volume",
+        "app_instance": "Istanza app",
+        "app_images": "Immagine app|Immagini app",
+        "app_volumes": "Volume app|Volumi app",
+        "installation_node": "Nodo di installazione",
+        "mount": "Percorso di mount",
+        "not_configured": "Non configurato",
+        "configure": "Configura",
+        "open_nextcloud_webapp": "Apri Nextcloud",
+        "nextcloud_webapp": "Nextcloud webapp"
+    },
+    "settings": {
+        "save": "Salva",
+        "title": "Impostazioni",
+        "configure_nextcloud": "Configura Nextcloud",
+        "host": "Nome host",
+        "disabled": "Disabilitato",
+        "enabled": "Abilitato",
+        "instance_configuration": "Configura {instance}",
+        "lets_encrypt": "Certificato Let's Encrypt",
+        "domain": "Dominio utenti",
+        "host_invalid_type": "Nome host non valido",
+        "collabora_host": "Nome host del server CODE",
+        "tls_verify_collabora": "Verifica certificato TLS",
+        "configuring": "Configurazione in corso...",
+        "host_string_gte": "Il nome host non può essere vuoto",
+        "collabora_host_tooltip": "Collabora Online Development Edition (CODE) è un server LibreOffice Online self-hostable. Permette di modificare i documenti di Office in un browser Web.",
+        "admin_password": "Password per l'utente 'admin'",
+        "collabora_placeholder": "Selezionare un server collabora o lasciare vuoto per disabilitarlo.",
+        "host_pattern": "Deve essere un nome di dominio pienamente qualificato valido",
+        "host_format": "Deve essere un nome di dominio pienamente qualificato valido",
+        "host_placeholder": "E.g. mynextcloud.example.org",
+        "choose_ldap_domain": "Selezionare un utente di dominio",
+        "no_user_domain": "Database utenti interno di Nextcloud",
+        "admin_password_tooltip": "L'utente 'admin' è l'amministratore interno di Nextcloud. Questa password viene utilizzata per autenticare 'admin' utente nell'interfaccia web di Nextcloud.",
+        "internal_smarthost": "Gestisci l'invio delle email dal pannello di amministrazione di Nextcloud."
+    },
+    "action": {
+        "configure-module": "Configura modulo",
+        "get-configuration": "Visualizza configurazione",
+        "get-module-info": "Visualizza info modulo",
+        "get-status": "Visualizza stato"
+    },
+    "about": {
+        "title": "Informazioni"
+    },
+    "task": {
+        "cannot_create_task": "Impossibile eseguire il task {action}"
+    }
+}
