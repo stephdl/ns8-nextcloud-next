@@ -201,7 +201,17 @@ Choices that did not work:
 - The public URL as `nextcloud_url`: it fails with a self-signed certificate.
 
 Rootless podman does not start `unless-stopped` containers after a reboot.
-`nextcloud-harp.service` starts the `nc_app_*` containers after HaRP.
+`nextcloud-harp.service` starts the `nc_app_*` containers after HaRP, except those with
+`StoppedByUser=true`: AppAPI stopped them because the admin disabled the ExApp.
+
+Turning the feature off stops the running ExApps with `podman stop`, which also sets
+`StoppedByUser`. `85exapps` writes their IDs in `state/exapps-running` and starts them
+again when the feature is turned back on.
+
+`85exapps` waits for the `nextcloud-init-sync.lock` of the entrypoint before it calls `occ`.
+When the ports of the registered daemon differ from the current ones, it unregisters the
+daemon and registers it again. If AppAPI refuses, because ExApps still use the daemon, the
+task fails with a message.
 
 ## Helper commands
 

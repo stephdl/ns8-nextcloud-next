@@ -20,6 +20,13 @@ The output of the command returns the instance name:
 
 The module does not start until it is configured.
 
+## Status page
+
+The Status page of the module shows the host name with a link to Nextcloud, the node, the
+backup, the system logs, the failed services, the images and the volumes. **Restart
+application** restarts every container of the module. Nextcloud is unavailable for a few
+seconds.
+
 ## Configure
 
 Fill in the Settings page, or run `configure-module`:
@@ -160,6 +167,9 @@ Things to know before you turn it on:
 Turning the feature off stops HaRP and the ExApps. Their containers and data stay, so
 turning it on again brings them back. To remove an ExApp for good, remove it in Nextcloud
 first.
+
+After a reboot or a restart of the module, the ExApps start again, except those disabled in
+Nextcloud.
 
 ## Two-factor authentication
 

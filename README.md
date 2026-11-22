@@ -91,4 +91,5 @@ CI runs only the install scenario until nextcloud-next is published in the forge
 To run the suite on your own node, see
 [Running tests locally](https://github.com/NethServer/ns8-github-actions/blob/v1/README.md#running-tests-locally).
 
-The UI translations come from ns8-nextcloud, as they were at the fork.
+The UI is translated by hand in every language under [ui/public/i18n](ui/public/i18n).
+English is the source. Add a new key to every language in the same change.
