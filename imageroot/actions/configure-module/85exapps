@@ -50,13 +50,16 @@ registered() {
         'fromjson? | .[] | select(.name == $d) | [.deploy_config.nextcloud_url, .deploy_config.harp.frp_address]'
 }
 
-# Ports change when a backup is restored on another node
+# A restore always gets new ports. The ExApp containers are not in the backup, so the
+# ExApps registered in the restored database are dead: drop them and install them again.
 current=$(registered)
 if [[ -n "${current}" && "${current}" != "$(jq -nc --arg u "${nc_url}" --arg f "${frp_address}" '[$u, $f]')" ]]; then
-    if ! occ app_api:daemon:unregister "${daemon}"; then
-        echo "Daemon ${daemon} uses old ports. Remove its External Apps, then save the settings again."
-        exit 1
-    fi
+    occ app_api:app:list | tr -d '\r' | sed -n 's/^\([a-z0-9_-]*\) (.*\[\(enabled\|disabled\)\]$/\1 \2/p' > exapps-reinstall
+    while read -r app _state; do
+        echo "Removing External App ${app}, its container was not restored"
+        occ app_api:app:unregister "${app}" --force --silent </dev/null || :
+    done < exapps-reinstall
+    occ app_api:daemon:unregister "${daemon}"
 fi
 
 if [[ -z "$(registered)" ]]; then
@@ -65,4 +68,12 @@ if [[ -z "$(registered)" ]]; then
         --harp_frp_address "${frp_address}" \
         --harp_shared_key "$(sed -n 's/^HP_SHARED_KEY=//p' harp.env)" \
         --set-default
+fi
+
+# Pulling the images can take long, so the restore does not wait for it
+if [[ -s exapps-reinstall ]]; then
+    systemd-run --user --unit nextcloud-exapps-reinstall --collect \
+        -p WorkingDirectory="${PWD}" \
+        "${AGENT_INSTALL_DIR}/bin/reinstall-exapps" || \
+        echo "Cannot start the reinstall of External Apps"
 fi

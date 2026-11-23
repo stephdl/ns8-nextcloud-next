@@ -1,0 +1,39 @@
+#!/bin/bash
+
+#
+# Copyright (C) 2026 Nethesis S.r.l.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+# Install again, from the app store, the External Apps listed in exapps-reinstall
+# by 85exapps after a restore. Each line is "<appid> <enabled|disabled>".
+# It runs in the background: pulling the images can take a long time.
+
+list=exapps-reinstall
+[[ -s "${list}" ]] || exit 0
+
+# The occ wrapper asks podman for a terminal, which a background unit does not have
+occ() {
+    podman exec --user www-data nextcloud-app php ./occ "$@"
+}
+
+failed=()
+while read -r app state; do
+    [[ -n "${app}" ]] || continue
+    echo "Installing External App ${app} again" >&2
+    if ! occ app_api:app:register "${app}" harp_proxy --wait-finish </dev/null >&2; then
+        echo "Cannot install ${app} again. Install it from the app store." >&2
+        failed+=("${app} ${state}")
+        continue
+    fi
+    if [[ "${state}" == "disabled" ]]; then
+        occ app_api:app:disable "${app}" </dev/null >&2 || :
+    fi
+done < "${list}"
+
+# Keep the failures, so a later configure-module does not retry the successful ones
+if (( ${#failed[@]} )); then
+    printf '%s\n' "${failed[@]}" > "${list}"
+else
+    rm -f "${list}"
+fi

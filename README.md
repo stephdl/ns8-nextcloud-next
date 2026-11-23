@@ -81,7 +81,9 @@ Open `https://cloud.example.org` and log in as `admin`, or with an account of th
 The Robot Framework tests in [tests/](tests/) run in CI on a fresh NS8 node, on Rocky Linux 9
 and Debian 13. They install the module, configure it, check that Nextcloud answers, create a
 user, upload a file with WebDAV and read it back, check that Nextcloud 35 and MariaDB 12.3 are
-running, then remove the module.
+running, and turn External Apps on and off. A second suite installs an External App, backs up
+the module to the local repository of the node, restores it in place, and checks the files and
+the HaRP daemon of the new instance. The last suite removes the module.
 
 The update scenario enables the stephdl forge, installs the release published there, updates
 it to the image under test, and checks that the configuration, u1 and its file survive.

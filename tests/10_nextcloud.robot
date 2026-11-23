@@ -82,7 +82,7 @@ Check if nextcloud works as expected
 Create user u1 with a file
     # Nextcloud rejects well-known passwords, and the occ wrapper does not pass the environment
     ${password} =    Evaluate    "Ct-" + secrets.token_hex(8)    modules=secrets
-    Set Suite Variable    ${u1_password}    ${password}
+    Set Global Variable    ${u1_password}    ${password}
     ${rc} =    Execute Command    runagent -m ${module_id} podman exec -e OC_PASS=${u1_password} --user www-data nextcloud-app php ./occ user:add --password-from-env --display-name="First User" u1
     ...    return_rc=True  return_stdout=False
     Should Be Equal As Integers    ${rc}  0
@@ -140,11 +140,3 @@ Check External Apps can be disabled
     Should Be Equal As Integers    ${rc}  0
     ${out} =    Execute Command    runagent -m ${module_id} systemctl --user is-active nextcloud-podman-api nextcloud-harp
     Should Be Equal    ${out}    inactive\ninactive
-
-Check if nextcloud is removed correctly
-    ${rc} =    Execute Command    remove-module --no-preserve ${module_id}
-    ...    return_rc=True  return_stdout=False
-    Should Be Equal As Integers    ${rc}  0
-    IF    '${SCENARIO}' == 'update'
-        Execute Command    api-cli run remove-repository --data '{"name":"stephdl"}'
-    END
